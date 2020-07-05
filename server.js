@@ -1,7 +1,7 @@
 const express = require("express");
 let messages = require("./messages.json");
 const cors = require("cors");
-
+const timestamp = require("time-stamp");
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -29,37 +29,46 @@ app.get("/messages", (req, res) => {
   res.json(messages);
 });
 
-app.get('/messages/search/', (req, res) => {
-  const text = req.query.text
-  res.json(messages.filter(message => message.text.includes(text)))
-})
+app.get("/messages/search/", (req, res) => {
+  const text = req.query.text;
+  res.json(messages.filter(message => message.text.includes(text)));
+});
 
-app.get('/messages/lates', (req, res) => {
-  res.json(messages.slice(messages.length-10, messages.length))
-})
+app.get("/messages/lates", (req, res) => {
+  res.json(messages.slice(messages.length - 10, messages.length));
+});
 
 app.get("/messages/:messageId", (req, res) => {
   const { messageId } = req.params;
   res.json(messages.find(message => message.id == messageId));
 });
 
+//obj["key3"] = "value3";
 app.post("/messages", (req, res) => {
   if (req.body.from.length > 0 && req.body.text.length > 0) {
+    req.body["timesent"] = timestamp("YYYY/MM/DD/HH:mm:ss");
     messages.push(req.body);
-    console.log("value: ", (req.body.from.length));
+    console.log("value: ", req.body.from.length);
     res.json({ "message send": true });
   } else {
-    res.status(400).json( {"message not send": true} );
+    res.status(400).json({ "message not send": true });
   }
 });
 
+app.put("/messages/:id", (req, res) => {
+  const { id } = req.params;
+  const message = messages.find(message => message.id == id);
+  
+  message.from = req.body.from;
+  message.text = req.body.text;
+
+  res.json(messages);
+});
+
 app.delete("/messages/:id", (req, res) => {
-  const messageId = req.params.id;
+  const messageId = Number(req.params.id);
   messages = messages.filter(message => message.id != messageId);
   res.json({ "Message deleted": true });
 });
 
-app.listen(process.env.PORT || 3000);
-
-
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT);
